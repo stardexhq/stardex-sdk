@@ -1,16 +1,13 @@
-/**
- * Typed client for the Stardex API — the "easy button" other apps use to
- * query indexed data. See backlog issue #21.
- */
-import type { EventQuery, Page, StardexEvent } from "@stardex/types";
+import type { EventQuery, Page, StardexEvent } from "./types.ts";
 
 export interface StardexClientOptions {
-  /** Base URL of a running Stardex API, e.g. "http://localhost:8080". */
+  /** Base URL of a running Stardex backend, e.g. "http://localhost:8080". */
   baseUrl: string;
   /** Optional custom fetch (defaults to the global fetch). */
   fetch?: typeof fetch;
 }
 
+/** Typed client for the Stardex backend API. */
 export class StardexClient {
   private readonly baseUrl: string;
   private readonly fetchFn: typeof fetch;
