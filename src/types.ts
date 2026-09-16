@@ -1,7 +1,4 @@
-/**
- * Shared types for Stardex — the "dictionary" the API and SDK both speak.
- * See backlog issue #20.
- */
+/** Types shared by the Stardex backend, this client, and the frontend. */
 
 /** A decoded contract event, as stored and returned by the API. */
 export interface StardexEvent {

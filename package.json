@@ -1,0 +1,38 @@
+{
+  "name": "@stardex/sdk",
+  "version": "0.1.0",
+  "description": "Typed TypeScript client and shared types for the Stardex API.",
+  "license": "Apache-2.0",
+  "type": "module",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/stardexhq/stardex-sdk.git"
+  },
+  "homepage": "https://github.com/stardexhq/stardex-sdk#readme",
+  "bugs": "https://github.com/stardexhq/stardex-sdk/issues",
+  "keywords": ["stellar", "soroban", "payments", "reconciliation", "sdk"],
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    }
+  },
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "files": ["dist"],
+  "sideEffects": false,
+  "publishConfig": {
+    "access": "public"
+  },
+  "packageManager": "pnpm@10.26.2",
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "test": "node --test \"test/**/*.test.ts\"",
+    "prepublishOnly": "pnpm typecheck && pnpm test && pnpm build"
+  },
+  "devDependencies": {
+    "@types/node": "^24.0.0",
+    "typescript": "^5.9.0"
+  }
+}
