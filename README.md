@@ -13,17 +13,65 @@ pnpm add @stardex/sdk
 ## Use
 
 ```ts
-import { StardexClient } from "@stardex/sdk";
+import { StardexClient, StardexApiError } from "@stardex/sdk";
 
-const stardex = new StardexClient({ baseUrl: "http://localhost:8080" });
+const stardex = new StardexClient({
+  baseUrl: "http://localhost:8080",
+  apiKey: process.env.STARDEX_ADMIN_KEY, // needed for invoices, payments and exports
+});
 
-const page = await stardex.events({ kind: "transfer", limit: 20 });
-console.log(page.items, page.nextCursor);
+// Create an invoice and show the customer how to pay it
+const invoice = await stardex.createInvoice({
+  account: "GABC...",
+  amount: "25.50",
+  customerName: "Acme Ltd",
+});
+console.log(invoice.paymentInstructions.muxedAddress); // M... address to pay
+console.log(invoice.paymentInstructions.sep7Uri); // web+stellar:pay?... for a link or QR code
+
+// Later: see what arrived and what still needs a human
+const unmatched = await stardex.payments({ status: "unmatched" });
+for (const payment of unmatched.items) {
+  console.log(payment.amount, payment.unmatchedReason);
+}
+await stardex.matchPayment(unmatched.items[0].id, invoice.id);
+
+// Export for the accountant
+const csv = await stardex.exportCsv("payments", { from: "2026-09-01" });
 ```
 
-Pass `page.nextCursor` back as `cursor` to fetch the next page.
+Amounts are always decimal strings like `"25.5000000"`, never JavaScript numbers, so nothing is lost to rounding.
 
-The types (`StardexEvent`, `Page`, `EventQuery`) are exported from the same package, so the backend and frontend share one definition of every request and response.
+List methods return `{ items, nextCursor }`. Pass `nextCursor` back as `cursor` to fetch the next page.
+
+Any non-2xx response throws a `StardexApiError` with `status` and the backend's message:
+
+```ts
+try {
+  await stardex.cancelInvoice(invoice.id);
+} catch (err) {
+  if (err instanceof StardexApiError && err.status === 409) {
+    console.log(err.message); // e.g. "a paid invoice cannot be cancelled"
+  }
+}
+```
+
+### Methods
+
+| Method | Endpoint |
+|---|---|
+| `events(query?)` | `GET /events` (public) |
+| `accounts()` | `GET /accounts` |
+| `invoices(query?)` | `GET /invoices` |
+| `invoice(id)` | `GET /invoices/:id` |
+| `createInvoice(input)` | `POST /invoices` |
+| `cancelInvoice(id)` | `POST /invoices/:id/cancel` |
+| `payments(query?)` | `GET /payments` |
+| `matchPayment(paymentId, invoiceId)` | `POST /payments/:id/match` |
+| `ignorePayment(paymentId)` | `POST /payments/:id/ignore` |
+| `exportCsv(kind, query?)` | `GET /exports/payments.csv` or `/exports/invoices.csv` |
+
+All request and response types (`Invoice`, `InvoiceDetail`, `Payment`, `PaymentInstructions`, and so on) are exported from the package.
 
 ## Develop
 
